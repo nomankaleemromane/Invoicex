@@ -1718,26 +1718,28 @@ class InvestmentChatbot {
     }
 
     async sendMessage(message) {
-        if (!this.apiKey) {
-            // Use mock response if no API key
-            const mockResponse = this.getMockResponse(message);
-            this.addMessage(mockResponse, 'bot');
-            return;
-        }
-
+        // Always show the user's message immediately in the UI
         this.addMessage(message, 'user');
         this.showTypingIndicator();
-        
+
+        // Always try to call the serverless chat endpoint. If it fails, fall back to mock.
         try {
             const response = await this.callGPTAPI(message);
             this.removeTypingIndicator();
             this.addMessage(response, 'bot');
             this.scrollToBottom();
         } catch (error) {
-            this.removeTypingIndicator();
-            const mockResponse = this.getMockResponse(message);
-            this.addMessage(mockResponse, 'bot');
-            console.error('Chatbot error:', error);
+            console.error('Chatbot server error, falling back to mock:', error);
+            try {
+                await new Promise(res => setTimeout(res, 600));
+                const mockResponse = this.getMockResponse(message);
+                this.removeTypingIndicator();
+                this.addMessage(mockResponse, 'bot');
+                this.scrollToBottom();
+            } catch (err) {
+                this.removeTypingIndicator();
+                console.error('Mock response error:', err);
+            }
         }
     }
 
@@ -1921,11 +1923,12 @@ class InvestmentChatbot {
             });
         }
 
-        // Send message on Enter key
+        // Send message on Enter key (use keydown for reliable Enter capture)
         const chatInput = document.getElementById('chatbotInput');
         if (chatInput) {
-            chatInput.addEventListener('keypress', (e) => {
+            chatInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     this.handleSendMessage();
                 }
             });
