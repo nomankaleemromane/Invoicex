@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoiceX Admin Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Passion+One:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        :root{
+            --primary-color: #F5C04B;
+            --primary-dark: #e6a832;
+            --dark-bg: #121212;
+            --text-color: #E0E0E0;
+            --card-bg: rgba(255,255,255,0.03);
+            --muted: rgba(224,224,224,0.6);
+        }
+        *{box-sizing:border-box}
+        body{font-family:'Roboto',sans-serif;background-image:url(assets/bg.webp);background-size:cover;color:var(--text-color);margin:0;padding-top:80px}
+        header{position:fixed;top:0;left:0;width:100%;padding:1rem 2rem;z-index:10;display:flex;align-items:center;background:rgba(18,18,18,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid rgba(245,192,75,0.1)}
+        .header-container{max-width:1400px;margin:0 auto;width:100%;display:flex;justify-content:space-between;align-items:center}
+        .logo-container{display:flex;align-items:center;gap:1rem}
+        .logo{width:48px}
+        .brand-name{font-family:'Passion One',cursive;font-size:1.8rem;color:#bababa}
+        .brand-name span{color:var(--primary-color)}
+        .auth-buttons{display:flex;gap:1rem}
+        .btn{padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer}
+        .btn-primary{background:var(--primary-color);color:#111;font-weight:600}
+        .container{max-width:1400px;margin:120px auto 60px;padding:1rem}
+        .card{background:var(--card-bg);padding:1rem;border-radius:12px;margin-bottom:1rem;border:1px solid rgba(255,255,255,0.03)}
+        .tabs{display:flex;gap:.5rem;flex-wrap:wrap}
+        .tab{padding:.55rem 1rem;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer;color:var(--muted)}
+        .tab.active{background:linear-gradient(90deg,var(--primary-color),var(--primary-dark));color:#111;border:none}
+        .search-row{display:flex;gap:.5rem;align-items:center;margin:1rem 0}
+        input.search{flex:1;padding:.6rem .8rem;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:transparent;color:var(--text-color)}
+        table{width:100%;border-collapse:collapse;margin-top:.5rem;font-size:0.95rem}
+        th,td{padding:.6rem .75rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.03)}
+        th{color:var(--muted);font-weight:600}
+        .actions button{margin-right:.4rem}
+        .status-badge{padding:.25rem .5rem;border-radius:6px;font-size:.85rem}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:40}
+        .modal{background:var(--dark-bg);padding:1rem;border-radius:12px;max-width:900px;width:100%;max-height:90vh;overflow:auto;border:1px solid rgba(255,255,255,0.04)}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+        .muted{color:var(--muted)}
+        .flex{display:flex;gap:.5rem;align-items:center}
+        .danger{background:#8b0000;color:#fff}
+        .success{background:#1a7a1a;color:#fff}
+        .small{font-size:.85rem;padding:.4rem .6rem;border-radius:6px}
+
+        /* Loading overlay + skeleton styles (theme colors) */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(18,18,18,0.85), rgba(18,18,18,0.92));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 360ms ease;
+        }
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+
+        .loader-card {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(245,192,75,0.08);
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            color: var(--text-color);
+            backdrop-filter: blur(6px);
+        }
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 4px solid rgba(245,192,75,0.12);
+            border-top-color: var(--primary-color);
+            animation: spin 900ms linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* skeleton shimmer */
+        .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.07) 50%, rgba(255,255,255,0.03) 100%); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; border-radius: 6px; }
+        @keyframes shimmer { 0% { background-position: -150% 0 } 100% { background-position: 150% 0 } }
+
+        /* quick helpers to fade in content smoothly once ready */
+        .fade-in { opacity: 0; transform: translateY(6px); transition: opacity 420ms ease, transform 420ms ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* small responsive adjustment so overlay content is neat on narrow screens */
+        @media (max-width:600px){ .loader-card{ padding:0.75rem; gap:0.6rem } .spinner{ width:34px;height:34px } }
+    </style>
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+        <div class="loader-card" role="status" aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <div>
+                <div style="font-weight:700;color:var(--primary-color)">InvoiceX Admin</div>
+                <div style="font-size:0.95rem;color:var(--text-color);opacity:.9">Loading dashboard — please wait...</div>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="assets/3.png" alt="InvoiceX" class="logo" onerror="this.style.display='none'">
+                <div class="brand-name">InvoiceX <span>Admin</span></div>
+            </div>
+            <div class="auth-buttons">
+                <div id="currentUser" class="muted"></div>
+                <button id="logoutBtn" class="btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
+                <h2 style="margin:0">Admin Console</h2>
+                <div class="tabs" id="tabs">
+                    <div class="tab active" data-tab="users">Users</div>
+                    <div class="tab" data-tab="invoices">Invoices</div>
+                    <div class="tab" data-tab="pools">Pools</div>
+                    <div class="tab" data-tab="investments">Investments</div>
+                    <div class="tab" data-tab="transactions">Transactions</div>
+                </div>
+            </div>
+            <div class="search-row">
+                <input id="globalSearch" class="search" placeholder="Search by id, email, name or pool/invoice id...">
+                <button id="refreshBtn" class="btn">Refresh</button>
+            </div>
+            <div id="content">
+                <!-- Users -->
+                <div class="tab-content" id="users">
+                    <div class="card">
+                        <h3>Users</h3>
+                        <div class="muted">List of registered users. You can change userType, status, or delete a user.</div>
+                        <table id="usersTable">
+                            <!-- In the users table header (around line 95) -->
+                            <thead>
+                                <tr>
+                                <th>UID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Type</th>
+                                <th>Credit Limit</th> <!-- ADD THIS -->
+                                <th>CreatedAt</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Invoices -->
+                <div class="tab-content" id="invoices" style="display:none">
+                    <div class="card">
+                        <h3>Invoices</h3>
+                        <div class="muted">List of invoices. Change status, view pdf, or delete.</div>
+                        <table id="invoicesTable">
+                            <thead><tr><th>InvoiceId</th><th>Seller</th><th>Amount</th><th>DueDate</th><th>Status</th><th>UploadedAt</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Pools -->
+                <div class="tab-content" id="pools" style="display:none">
+                    <div class="card">
+                        <h3>Pools</h3>
+                        <div class="muted">Manage pools (listings). Update status, adjust funded amount, or delete pool.</div>
+                        <table id="poolsTable">
+                            <thead><tr><th>PoolId</th><th>Name</th><th>SellerUid</th><th>FaceValue</th><th>Advance</th><th>Discount%</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Investments -->
+                <div class="tab-content" id="investments" style="display:none">
+                    <div class="card">
+                        <h3>Investments</h3>
+                        <div class="muted">All investments made by investors.</div>
+                        <table id="investmentsTable">
+                            <thead><tr><th>InvestmentId</th><th>Investor</th><th>Pool</th><th>Amount</th><th>Shares</th><th>Status</th><th>CreatedAt</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Transactions -->
+                <div class="tab-content" id="transactions" style="display:none">
+                    <div class="card">
+                        <h3>Transactions</h3>
+                        <div class="muted">All platform transactions.</div>
+                        <table id="transactionsTable">
+                            <thead><tr><th>TxId</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Timestamp</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="modalContent">
+            <div class="modal-header">
+                <div id="modalTitle">Details</div>
+                <div><button id="closeModal" class="btn">Close</button></div>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+    // Firebase config (copied from index.html) - required to connect to your project
+    const firebaseConfig = {
+    apiKey: "AIzaSyAy3U4DYkseYNCskX1Rf20Ti6PcEcAyKW0",
+    authDomain: "invoicex-d61c5.firebaseapp.com",
+    databaseURL: "https://invoicex-d61c5-default-rtdb.firebaseio.com",
+    projectId: "invoicex-d61c5",
+    storageBucket: "invoicex-d61c5.firebasestorage.app",
+    messagingSenderId: "285072402133",
+    appId: "1:285072402133:web:0b778beff3bfed25c6e45c"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // UI refs
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const globalSearch = document.getElementById('globalSearch');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUserDiv = document.getElementById('currentUser');
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeModal = document.getElementById('closeModal');
+
+        // Data caches
+        let cache = {users:{}, invoices:{}, pools:{}, investments:{}, transactions:{}};
+
+        // Tab handling
+        tabs.forEach(t=>t.addEventListener('click', ()=>{
+            tabs.forEach(x=>x.classList.remove('active'));
+            t.classList.add('active');
+            const name = t.getAttribute('data-tab');
+            tabContents.forEach(c=>c.style.display = c.id===name? 'block':'none');
+        }));
+
+        // Modal handlers
+        function openModal(title, html){
+            modalTitle.textContent = title;
+            modalBody.innerHTML = html;
+            modalOverlay.style.display = 'flex';
+        }
+        function closeModalFn(){ modalOverlay.style.display='none'; modalBody.innerHTML=''; }
+        closeModal.addEventListener('click', closeModalFn);
+        modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) closeModalFn(); });
+
+        // Auth restriction: only allow a specific email
+        auth.onAuthStateChanged(user=>{
+            if(!user){ window.location.href='index.html'; return; }
+            // Only allow this admin email
+            if(user.email !== 'nomanromane@gmail.com'){
+                alert('Access denied. Admins only.');
+                auth.signOut().then(()=> window.location.href='index.html');
+                return;
+            }
+            currentUserDiv.textContent = user.email;
+            // Load data after auth validated
+            loadAllData();
+            setupRealtimeListeners();
+        });
+
+        logoutBtn.addEventListener('click', ()=>{ auth.signOut().then(()=>window.location.href='index.html'); });
+
+        refreshBtn.addEventListener('click', ()=> loadAllData());
+
+        globalSearch.addEventListener('input', ()=> renderActiveTab());
+
+        function loadAllData(){
+            showLoading('Loading data...');
+            // Read whole nodes once and cache
+            Promise.all([
+                database.ref('users').once('value'),
+                database.ref('invoices').once('value'),
+                database.ref('pools').once('value'),
+                database.ref('investments').once('value'),
+                database.ref('transactions').once('value')
+            ]).then(([u,i,p,inv,tx])=>{
+                cache.users = u.val()||{};
+                cache.invoices = i.val()||{};
+                cache.pools = p.val()||{};
+                cache.investments = inv.val()||{};
+                cache.transactions = tx.val()||{};
+                renderActiveTab();
+                // small delay so UI transitions are visible
+                setTimeout(hideLoading, 300);
+            }).catch(err=>{
+                console.error('Load error',err); alert('Failed to load data: '+err.message);
+                hideLoading();
+            });
+        }
+
+        function setupRealtimeListeners(){
+            database.ref().on('value', ()=>{ loadAllData(); });
+        }
+
+        function renderActiveTab(){
+            const active = document.querySelector('.tab.active').getAttribute('data-tab');
+            const q = globalSearch.value.trim().toLowerCase();
+            if(active==='users') renderUsers(q);
+            if(active==='invoices') renderInvoices(q);
+            if(active==='pools') renderPools(q);
+            if(active==='investments') renderInvestments(q);
+            if(active==='transactions') renderTransactions(q);
+        }
+
+        // Renderers and actions
+        function renderUsers(q){
+            const tbody = document.querySelector('#usersTable tbody'); tbody.innerHTML='';
+            Object.keys(cache.users).forEach(uid=>{
+                const u = cache.users[uid];
+                const rowText = (uid + ' ' + (u.fullName||'') + ' ' + (u.email||'') + ' ' + (u.userType||'')).toLowerCase();
+                if(q && rowText.indexOf(q)===-1) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${uid}</td>
+                    <td>${escapeHtml(u.fullName||'')}</td>
+                    <td>${escapeHtml(u.email||'')}</td>
+                    <td>
+                        <select data-uid="${uid}" class="user-type-select">
+                            <option value="business" ${u.userType==='business'?'selected':''}>business</option>
+                            <option value="investor" ${u.userType==='investor'?'selected':''}>investor</option>
+                            <option value="admin" ${u.userType==='admin'?'selected':''}>admin</option>
+                        </select>
+                    </td>
+                    <td>
+                        <!-- ADD CREDIT LIMIT INPUT - Only show for business users -->
+                        ${u.userType === 'business' ? 
+                            `<input type="number" data-uid="${uid}" class="credit-limit-input" 
+                            value="${u.financingLimit || 0}" style="width: 100px; padding: 0.2rem;">` 
+                            : 'N/A'
+                        }
+                    </td>
+                    <td>${(u.createdAt || u.createdAt === 0) ? formatTs(u.createdAt) : ''}</td>
+                    <td><input data-uid="${uid}" class="status-input" value="${escapeHtml(u.status||'active')}"></td>
+                    <td class="actions">
+                        <button class="small" data-uid="${uid}" onclick="viewUser('${uid}')">View</button>
+                        <button class="small" data-uid="${uid}" onclick="saveUser('${uid}')">Save</button>
+                        <button class="small danger" data-uid="${uid}" onclick="deleteUser('${uid}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderInvoices(q){
+            const tbody = document.querySelector('#invoicesTable tbody'); tbody.innerHTML='';
+            Object.keys(cache.invoices).forEach(id=>{
+                const inv = cache.invoices[id];
+                const rowText = (id + ' ' + (inv.sellerBusinessName||'') + ' ' + (inv.buyerEmail||'') + ' ' + (inv.status||'')).toLowerCase();
+                if(q && rowText.indexOf(q)===-1) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${escapeHtml(inv.sellerBusinessName||inv.sellerUid||'')}</td>
+                    <td>${inv.amount||''}</td>
+                    <td>${escapeHtml(inv.dueDate||'')}</td>
+                    <td>
+                        <select data-id="${id}" class="status-select">
+                            <option value="pending_verification" ${inv.status==='pending_verification'?'selected':''}>pending_verification</option>
+                            <option value="verified" ${inv.status==='verified'?'selected':''}>verified</option>
+                            <option value="listed" ${inv.status==='listed'?'selected':''}>listed</option>
+                            <option value="funded" ${inv.status==='funded'?'selected':''}>funded</option>
+                            <option value="paid" ${inv.status==='paid'?'selected':''}>paid</option>
+                            <option value="rejected" ${inv.status==='rejected'?'selected':''}>rejected</option>
+                        </select>
+                    </td>
+                    <td>${formatTs(inv.uploadedAt || inv.createdAt)}</td>
+                    <td class="actions">
+                        <button class="small" onclick="viewInvoice('${id}')">View</button>
+                        <!-- ADD VERIFY BUTTON FOR PENDING INVOICES -->
+                        ${inv.status === 'pending_verification' ? 
+                            `<button class="small success" onclick="verifyInvoice('${id}')">Verify</button>` : 
+                            ''
+                        }
+                        <button class="small" onclick="saveInvoice('${id}')">Save</button>
+                        <button class="small danger" onclick="deleteInvoice('${id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Add this function to the admin dashboard's action functions
+        function verifyInvoice(id){
+            if(!confirm('Verify invoice '+id+'?')) return;
+            
+            const updates = {
+                ['invoices/'+id+'/status']: 'verified',
+                ['invoices/'+id+'/verifiedAt']: Date.now(),
+                ['invoices/'+id+'/verifiedBy']: auth.currentUser.email
+            };
+            
+            database.ref().update(updates)
+                .then(()=>{ 
+                    alert('Invoice verified successfully!'); 
+                    loadAllData(); 
+                })
+                .catch(err=>{
+                    console.error('Error verifying invoice:', err);
+                    alert('Error verifying invoice: '+err.message);
+                });
+        }
+
+        function renderPools(q){
+            const tbody = document.querySelector('#poolsTable tbody'); tbody.innerHTML='';
+            Object.keys(cache.pools).forEach(id=>{
+                const p = cache.pools[id];
+                const rowText = (id + ' ' + (p.name||'') + ' ' + (p.sellerUid||'') + ' ' + (p.status||'')).toLowerCase();
+                if(q && rowText.indexOf(q)===-1) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${escapeHtml(p.name||'')}</td>
+                    <td>${escapeHtml(p.sellerUid||'')}</td>
+                    <td>${p.faceValueTotal||0}</td>
+                    <td><input data-id="${id}" class="num-input" value="${p.advanceAmount||0}"></td>
+                    <td>${p.discountPercent||0}</td>
+                    <td><input data-id="${id}" class="status-input" value="${escapeHtml(p.status||'')}"></td>
+                    <td class="actions">
+                        <button class="small" onclick="viewPool('${id}')">View</button>
+                        <button class="small" onclick="savePool('${id}')">Save</button>
+                        <button class="small danger" onclick="deletePool('${id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderInvestments(q){
+            const tbody = document.querySelector('#investmentsTable tbody'); tbody.innerHTML='';
+            Object.keys(cache.investments).forEach(id=>{
+                const inv = cache.investments[id];
+                const rowText = (id + ' ' + (inv.investorName||'') + ' ' + (inv.poolName||'') + ' ' + (inv.status||'')).toLowerCase();
+                if(q && rowText.indexOf(q)===-1) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${escapeHtml(inv.investorName||inv.investorEmail||inv.investorUid||'')}</td>
+                    <td>${escapeHtml(inv.poolName||inv.poolId||'')}</td>
+                    <td>${inv.amount||0}</td>
+                    <td>${inv.shares||''}</td>
+                    <td><input data-id="${id}" class="status-input" value="${escapeHtml(inv.status||'')}"></td>
+                    <td>${inv.createdAt||inv.purchaseDate||''}</td>
+                    <td class="actions">
+                        <button class="small" onclick="viewInvestment('${id}')">View</button>
+                        <button class="small" onclick="saveInvestment('${id}')">Save</button>
+                        <button class="small danger" onclick="deleteInvestment('${id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTransactions(q){
+            const tbody = document.querySelector('#transactionsTable tbody'); tbody.innerHTML='';
+            Object.keys(cache.transactions).forEach(id=>{
+                const tx = cache.transactions[id];
+                const rowText = (id + ' ' + (tx.type||'') + ' ' + (tx.fromName||'') + ' ' + (tx.toName||'')).toLowerCase();
+                if(q && rowText.indexOf(q)===-1) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${id}</td>
+                    <td>${escapeHtml(tx.type||'')}</td>
+                    <td>${escapeHtml(tx.fromName||tx.fromUid||'')}</td>
+                    <td>${escapeHtml(tx.toName||tx.toUid||'')}</td>
+                    <td>${tx.amount||0}</td>
+                    <td>${formatTs(tx.timestamp||tx.createdAt||'')}</td>
+                    <td class="actions">
+                        <button class="small" onclick="viewTransaction('${id}')">View</button>
+                        <button class="small danger" onclick="deleteTransaction('${id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Action functions (view/save/delete)
+        function viewUser(uid){
+            const u = cache.users[uid];
+            openModal('User: '+uid, `<pre>${escapeHtml(JSON.stringify(u, null, 2))}</pre>`);
+        }
+        function saveUser(uid){
+            const select = document.querySelector(`select[data-uid="${uid}"]`);
+            const statusInput = document.querySelector(`input.status-input[data-uid="${uid}"]`);
+            const creditLimitInput = document.querySelector(`input.credit-limit-input[data-uid="${uid}"]`);
+            
+            const updates = {};
+            if(select) updates['users/'+uid+'/userType'] = select.value;
+            if(statusInput) updates['users/'+uid+'/status'] = statusInput.value;
+            
+            // ADD CREDIT LIMIT UPDATE - Only update if it's a business user and input exists
+            if(creditLimitInput) {
+                const creditLimit = parseFloat(creditLimitInput.value) || 0;
+                updates['users/'+uid+'/financingLimit'] = creditLimit;
+            }
+            
+            database.ref().update(updates)
+                .then(()=>{ 
+                    alert('User updated successfully!'); 
+                    loadAllData(); 
+                })
+                .catch(err=>alert('Error updating user: ' + err.message));
+        }
+        function deleteUser(uid){
+            if(!confirm('Delete user '+uid+'? This cannot be undone.')) return;
+            database.ref('users/'+uid).remove().then(()=>{ alert('Deleted'); loadAllData(); }).catch(err=>alert(err.message));
+        }
+
+        function viewInvoice(id){
+            const inv = cache.invoices[id];
+            let html = `<div class="muted">Invoice ${id}</div><pre>${escapeHtml(JSON.stringify(inv, null, 2))}</pre>`;
+            if(inv && inv.pdfStorageUrl){ html += `<div style="margin-top:1rem"><a href="${inv.pdfStorageUrl}" target="_blank">Open PDF</a></div>`; }
+            openModal('Invoice: '+id, html);
+        }
+        function saveInvoice(id){
+            const statusSelect = document.querySelector(`select.status-select[data-id="${id}"]`);
+            const updates = {};
+            if(statusSelect) updates['invoices/'+id+'/status'] = statusSelect.value;
+            database.ref().update(updates).then(()=>{ alert('Invoice updated'); loadAllData(); }).catch(err=>alert(err.message));
+        }
+        function deleteInvoice(id){
+            if(!confirm('Delete invoice '+id+'?')) return;
+            database.ref('invoices/'+id).remove().then(()=>{ alert('Deleted'); loadAllData(); }).catch(err=>alert(err.message));
+        }
+
+        function viewPool(id){ const p = cache.pools[id]; openModal('Pool: '+id, `<pre>${escapeHtml(JSON.stringify(p, null, 2))}</pre>`); }
+        function savePool(id){
+            const advanceInput = document.querySelector(`input.num-input[data-id="${id}"]`);
+            const statusInput = document.querySelector(`input.status-input[data-id="${id}"]`);
+            const updates = {};
+            if(advanceInput) updates['pools/'+id+'/advanceAmount'] = parseFloat(advanceInput.value) || 0;
+            if(statusInput) updates['pools/'+id+'/status'] = statusInput.value;
+            database.ref().update(updates).then(()=>{ alert('Pool updated'); loadAllData(); }).catch(err=>alert(err.message));
+        }
+        function deletePool(id){ if(!confirm('Delete pool '+id+'?')) return; database.ref('pools/'+id).remove().then(()=>{ alert('Deleted'); loadAllData(); }).catch(err=>alert(err.message)); }
+
+        function viewInvestment(id){ openModal('Investment: '+id, `<pre>${escapeHtml(JSON.stringify(cache.investments[id]||{}, null, 2))}</pre>`); }
+        function saveInvestment(id){ const statusInput = document.querySelector(`input.status-input[data-id="${id}"]`); const updates = {}; if(statusInput) updates['investments/'+id+'/status'] = statusInput.value; database.ref().update(updates).then(()=>{ alert('Investment updated'); loadAllData(); }).catch(err=>alert(err.message)); }
+        function deleteInvestment(id){ if(!confirm('Delete investment '+id+'?')) return; database.ref('investments/'+id).remove().then(()=>{ alert('Deleted'); loadAllData(); }).catch(err=>alert(err.message)); }
+
+        function viewTransaction(id){ openModal('Transaction: '+id, `<pre>${escapeHtml(JSON.stringify(cache.transactions[id]||{}, null, 2))}</pre>`); }
+        function deleteTransaction(id){ if(!confirm('Delete transaction '+id+'?')) return; database.ref('transactions/'+id).remove().then(()=>{ alert('Deleted'); loadAllData(); }).catch(err=>alert(err.message)); }
+
+        // Helpers (loading overlay + existing helpers)
+        function showLoading(msg){
+            const overlay = document.getElementById('loadingOverlay');
+            if(overlay){
+                if(msg) overlay.querySelector('.loader-card div:last-child').lastChild.textContent = msg;
+                overlay.classList.add('active');
+            }
+        }
+        function hideLoading(){
+            const overlay = document.getElementById('loadingOverlay');
+            if(overlay){
+                overlay.classList.remove('active');
+            }
+        }
+
+        // Helpers
+        function formatTs(ts){ if(!ts) return ''; try{ if(typeof ts === 'number') return new Date(ts).toLocaleString(); return new Date(ts).toLocaleString(); }catch(e){ return ts; } }
+        function escapeHtml(s){ if(s===undefined||s===null) return ''; return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+        function loadScript(url, cb){ const s=document.createElement('script'); s.src=url; s.onload=cb; document.head.appendChild(s); }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Dashboard - InvoiceX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Passion+One:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #F5C04B;
+            --primary-dark: #e6a832;
+            --secondary-color: #6C63FF;
+            --dark-bg: #121212;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --text-color: #E0E0E0;
+            --text-light: rgba(224, 224, 224, 0.7);
+            --success-color: #4CAF50;
+            --info-color: #2196F3;
+            --warning-color: #FF9800;
+            --danger-color: #f44336;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url(assets/bg.webp);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-color);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(18, 18, 18, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(245, 192, 75, 0.1);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 50px;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(245, 192, 75, 0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .brand-name {
+            font-family: 'Passion One', cursive;
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: #bababa;
+            text-shadow: 0 0 30px rgba(245, 192, 75, 0.4);
+            position: relative;
+            display: inline-block;
+        }
+
+        .brand-name span {
+            color: var(--primary-color);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .auth-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .login-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .login-btn:hover {
+            background: rgba(245, 192, 75, 0.1);
+        }
+
+        .register-btn {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border: 2px solid var(--primary-color);
+            font-weight: 600;
+        }
+
+        .register-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 192, 75, 0.3);
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-family: 'Passion One', cursive;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        /* Overview Cards */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .overview-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(245, 192, 75, 0.4);
+        }
+
+        .card-value {
+            font-family: 'Passion One', cursive;
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Section Styles */
+        .section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .status-pending { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
+        .status-completed { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+        .status-paid { background: rgba(156, 39, 176, 0.2); color: #9C27B0; }
+        .status-default { background: rgba(224, 224, 224, 0.2); color: #E0E0E0; }
+
+        /* Risk Indicators */
+        .risk-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .risk-low { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .risk-medium { background: rgba(255, 152, 0, 0.2); color: #FF9800; }
+        .risk-high { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        .btn-small {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        /* Investment Cards */
+        .investments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .investment-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(245, 192, 75, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .investment-card:hover {
+            border-color: rgba(245, 192, 75, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .investment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .investment-name {
+            font-family: 'Passion One', cursive;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .investment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .investment-detail {
+            text-align: center;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .investment-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--dark-bg);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            padding: 2.5rem;
+            position: relative;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(245, 192, 75, 0.2);
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-title {
+            font-family: 'Passion One', cursive;
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .modal-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-section-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .business-profile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .profile-detail {
+            margin-bottom: 1rem;
+        }
+
+        .profile-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .profile-value {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 1001;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: var(--danger-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 15px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.8rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .empty-description {
+            color: var(--text-light);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .investments-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .business-profile {
+                grid-template-columns: 1fr;
+            }
+            
+            .investment-details {
+                grid-template-columns: 1fr;
+            }
+        }
+/* Modern Navigation Styles */
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--primary-color);
+    background: rgba(245, 192, 75, 0.1);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+.nav-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 0.5rem;
+}
+
+.nav-dashboard-btn {
+    background: rgba(245, 192, 75, 0.1);
+    border-color: rgba(245, 192, 75, 0.3);
+}
+
+.nav-dashboard-btn:hover {
+    background: rgba(245, 192, 75, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .main-nav {
+        gap: 1rem;
+    }
+    
+    .nav-link {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-divider {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+/* Loading overlay + skeleton/fade-in for Investor Dashboard */
+.loading-overlay {
+    position: fixed; 
+    inset: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(180deg, rgba(18,18,18,0.86), rgba(18,18,18,0.95));
+    z-index: 2200; 
+    opacity: 0; 
+    pointer-events: none; 
+    transition: opacity 320ms ease;
+}
+.loading-overlay.active { 
+    opacity: 1; 
+    pointer-events: all; 
+}
+.loader-card { 
+    display: flex; 
+    gap: 1rem; 
+    align-items: center; 
+    padding: 1rem 1.25rem; 
+    border-radius: 12px; 
+    background: rgba(255,255,255,0.03); 
+    border: 1px solid rgba(245,192,75,0.08); 
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6); 
+}
+.spinner { 
+    width: 44px; 
+    height: 44px; 
+    border-radius: 50%; 
+    border: 4px solid rgba(255,255,255,0.06); 
+    border-top-color: var(--primary-color); 
+    animation: spin 900ms linear infinite; 
+}
+@keyframes spin { 
+    to { transform: rotate(360deg); } 
+}
+    </style>
+</head>
+<body>
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+    <div class="loader-card" role="status">
+        <div class="spinner" aria-hidden="true"></div>
+        <div>
+            <div style="font-weight:700;color:var(--primary-color)">Investor Dashboard</div>
+            <div style="font-size:.95rem;color:var(--text-light)">Loading your portfolio...</div>
+        </div>
+    </div>
+</div>
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="assets/3.png" alt="InvoiceX Logo" class="logo" onerror="this.style.display='none'">
+                <h1 class="brand-name">Invoice<span>X</span></h1>
+            </div>
+            
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="marketplace.html" class="nav-link">Marketplace</a>
+                <div class="nav-divider"></div>
+                <button class="auth-btn login-btn nav-dashboard-btn" id="dashboardBtn">Dashboard</button>
+                <button class="auth-btn register-btn" id="logoutBtn">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Investor Dashboard</h1>
+            <p class="dashboard-subtitle" id="welcomeMessage">Welcome back, Investor!</p>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="overview-grid">
+            <div class="overview-card">
+                <div class="card-value" id="card-totalInvested">0</div>
+                <div class="card-label">Total Invested</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-value" id="card-activeInvestments">0</div>
+                <div class="card-label">Active Investments</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-value" id="card-totalReturns">0</div>
+                <div class="card-label">Total Returns</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-value" id="card-expectedROI">0%</div>
+                <div class="card-label">Expected ROI</div>
+            </div>
+        </div>
+
+        <!-- Active Investments Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>Active Investments</span>
+                <button class="btn btn-primary" onclick="window.location.href='marketplace.html'">
+                    <i class="fas fa-plus"></i> New Investment
+                </button>
+            </div>
+            
+            <div class="investments-grid" id="activeInvestments">
+                <!-- Active investments will be populated by JavaScript -->
+            </div>
+            
+            <div class="empty-state" id="emptyActiveInvestments" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2 class="empty-title">No Active Investments</h2>
+                <p class="empty-description">
+                    You don't have any active investments yet. 
+                    Browse the marketplace to find investment opportunities.
+                </p>
+                <button class="btn btn-primary" onclick="window.location.href='marketplace.html'" style="margin-top: 1.5rem;">
+                    Explore Marketplace
+                </button>
+            </div>
+        </div>
+
+        <!-- Investment History Section -->
+        <div class="section">
+            <div class="section-title">Investment History</div>
+            <div class="table-container">
+                <table class="data-table" id="investmentHistory">
+                    <thead>
+                        <tr>
+                            <th>Investment ID</th>
+                            <th>Business</th>
+                            <th>Amount (AED)</th>
+                            <th>Shares</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Investment history will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="empty-state" id="emptyInvestmentHistory" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <h2 class="empty-title">No Investment History</h2>
+                <p class="empty-description">
+                    Your investment history will appear here once you make your first investment.
+                </p>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div class="section">
+            <div class="section-title">Transaction History</div>
+            <div class="table-container">
+                <table class="data-table" id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Type</th>
+                            <th>Amount (AED)</th>
+                            <th>Related Investment</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Transactions will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="empty-state" id="emptyTransactions" style="display: none;">
+                <div class="empty-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <h2 class="empty-title">No Transactions</h2>
+                <p class="empty-description">
+                    Your transaction history will appear here once you make your first investment.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Details Modal -->
+    <div class="modal-overlay" id="investmentDetailsModal">
+        <div class="modal">
+            <button class="close-modal" id="closeInvestmentDetailsModal">&times;</button>
+            <h2 class="modal-title" id="investmentDetailsTitle">Investment Details</h2>
+            
+            <div class="modal-section">
+                <h3 class="modal-section-title">Investment Overview</h3>
+                <div class="investment-details" id="investmentOverview">
+                    <!-- Investment overview will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-section">
+                <h3 class="modal-section-title">Business Profile</h3>
+                <div class="business-profile" id="investmentBusinessProfile">
+                    <!-- Business profile will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-section">
+                <h3 class="modal-section-title">Performance Metrics</h3>
+                <div class="investment-details" id="performanceMetrics">
+                    <!-- Performance metrics will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-section">
+                <h3 class="modal-section-title">Payment Schedule</h3>
+                <div class="table-container">
+                    <table class="data-table" id="paymentSchedule">
+                        <thead>
+                            <tr>
+                                <th>Due Date</th>
+                                <th>Expected Amount (AED)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Payment schedule will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAy3U4DYkseYNCskX1Rf20Ti6PcEcAyKW0",
+            authDomain: "invoicex-d61c5.firebaseapp.com",
+            databaseURL: "https://invoicex-d61c5-default-rtdb.firebaseio.com",
+            projectId: "invoicex-d61c5",
+            storageBucket: "invoicex-d61c5.firebasestorage.app",
+            messagingSenderId: "285072402133",
+            appId: "1:285072402133:web:0b778beff3bfed25c6e45c"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get references to Firebase services
+        const auth = firebase.auth();
+        const database = firebase.database();
+    </script>
+    <script>
+    // Loading helpers
+    function showLoading(msg){
+        const overlay = document.getElementById('loadingOverlay');
+        if(overlay){
+            if(msg) overlay.querySelector('.loader-card div:last-child').lastChild.textContent = msg;
+            overlay.classList.add('active');
+        }
+    }
+    function hideLoading(){ 
+        const overlay = document.getElementById('loadingOverlay'); 
+        if(overlay) overlay.classList.remove('active'); 
+    }
+
+    // Show loader immediately
+    showLoading('Initializing investor dashboard...');
+    </script>
+    <script>
+        // Investor Dashboard JavaScript Logic
+        class InvestorDashboard {
+            constructor() {
+                this.currentUserUid = null;
+                this.selectedInvestment = null;
+                this.init();
+            }
+
+            init() {
+                this.initializeEventListeners();
+                this.loadDashboard();
+                this.setupRealtimeListeners();
+            }
+
+            calculateFundingProgress(investment) {
+                // For now, return 100% if funded, otherwise calculate based on pool data
+                // You'll need to fetch pool data to get accurate progress
+                return investment.status === 'active' ? 100 : 0;
+            }
+
+            async fetchPoolData(poolId) {
+                try {
+                    const snapshot = await database.ref('pools/' + poolId).once('value');
+                    return snapshot.val();
+                } catch (error) {
+                    console.error('Error fetching pool data:', error);
+                    return null;
+                }
+            }
+
+            async fetchBusinessData(sellerUid) {
+                try {
+                    const snapshot = await database.ref('users/' + sellerUid).once('value');
+                    return snapshot.val();
+                } catch (error) {
+                    console.error('Error fetching business data:', error);
+                    return null;
+                }
+            }
+            getCurrentUserUid() {
+                const user = auth.currentUser;
+                if (user) {
+                    return user.uid;
+                }
+                
+                const storedUser = localStorage.getItem('currentUser');  
+                if (storedUser) {
+                    return JSON.parse(storedUser).uid;
+                }
+                
+                // If no user found, redirect to login
+                alert('Please login first');
+                window.location.href = 'index.html';
+                return null;
+            }
+
+            async loadDashboard() {
+                try {
+                    showLoading('Loading dashboard data...');
+                    
+                    const uid = this.getCurrentUserUid();
+                    if (!uid) return;
+                    
+                    this.currentUserUid = uid;
+
+                    showLoading('Fetching your portfolio...');
+                    
+                    // Load all data in parallel
+                    const [userData, investments, transactions] = await Promise.all([
+                        this.fetchUserData(uid),
+                        this.fetchInvestmentsForInvestor(uid),
+                        this.fetchTransactionsForInvestor(uid)
+                    ]);
+
+                    showLoading('Processing investments...');
+                    
+                    this.renderOverviewCards(investments);
+                    this.renderActiveInvestments(investments);
+                    this.renderInvestmentHistory(investments);
+                    this.renderTransactions(transactions);
+
+                    // Update welcome message
+                    document.getElementById('welcomeMessage').textContent = 
+                        `Welcome back, ${userData.fullName || 'Investor'}!`;
+
+                    // Hide loading after a short delay to ensure smooth transition
+                    setTimeout(hideLoading, 500);
+                    
+                } catch (error) {
+                    console.error('Error loading dashboard:', error);
+                    this.showToast('Error loading dashboard data', 'error');
+                    hideLoading();
+                }
+            }
+
+            async fetchUserData(uid) {
+                const snapshot = await database.ref('users/' + uid).once('value');
+                return snapshot.val();
+            }
+
+            async fetchInvestmentsForInvestor(uid) {
+                // Use once() with await and dedupe by key to ensure unique investments
+                try {
+                    const snapshot = await database.ref('investments').orderByChild('investorUid').equalTo(uid).once('value');
+                    const val = snapshot.val() || {};
+                    const investments = Object.keys(val).map(key => ({ id: key, ...val[key] }));
+
+                    // Deduplicate just in case by id (Map preserves last seen)
+                    const unique = Array.from(new Map(investments.map(i => [i.id, i])).values());
+
+                    // Sort by creation date (newest first)
+                    unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    return unique;
+                } catch (err) {
+                    console.error('Error fetching investments (once):', err);
+                    return [];
+                }
+            }
+
+            // Replace fetchTransactionsForInvestor to include incoming (toUid) payouts
+            async fetchTransactionsForInvestor(uid) {
+                try {
+                    const snapshot = await database.ref('transactions').once('value');
+                    const val = snapshot.val() || {};
+                    const allTx = Object.keys(val).map(key => ({ id: key, ...val[key] }));
+                    // Filter transactions where user is either sender or recipient
+                    const userTx = allTx.filter(tx => tx.fromUid === uid || tx.toUid === uid);
+                    // Sort by timestamp (newest first)
+                    userTx.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    return userTx;
+                } catch (err) {
+                    console.error('Error fetching transactions:', err);
+                    return [];
+                }
+            }
+
+            renderOverviewCards(investments) {
+                // Total Invested
+                const totalInvested = investments.reduce((sum, investment) => sum + investment.amount, 0);
+                document.getElementById('card-totalInvested').textContent = totalInvested.toLocaleString();
+
+                // Active Investments
+                const activeInvestments = investments.filter(inv => inv.status === 'active').length;
+                document.getElementById('card-activeInvestments').textContent = activeInvestments;
+
+                // Total Returns (simplified calculation)
+                const totalReturns = investments
+                    .filter(inv => inv.status === 'completed' || inv.status === 'paid')
+                    .reduce((sum, investment) => {
+                        // For active investments, calculate expected returns
+                        // For completed investments, use actual returns (you'll need to add this field)
+                        const roi = (investment.expectedROI || 0) / 100;
+                        return sum + (investment.amount * roi);
+                    }, 0);
+                document.getElementById('card-totalReturns').textContent = Math.round(totalReturns).toLocaleString();
+
+                // Expected ROI (weighted average)
+                const weightedROI = investments.length > 0 ? 
+                    investments.reduce((sum, investment) => {
+                        const roi = investment.expectedROI || 0;
+                        return sum + (roi * investment.amount);
+                    }, 0) / totalInvested : 0;
+                document.getElementById('card-expectedROI').textContent = weightedROI.toFixed(1) + '%';
+            }
+
+            async renderActiveInvestments(investments) {
+                const container = document.getElementById('activeInvestments');
+                const emptyState = document.getElementById('emptyActiveInvestments');
+
+                // Deduplicate incoming list (defensive)
+                const uniqueInvestments = Array.from(new Map(investments.map(i => [i.id, i])).values());
+
+                const activeInvestments = uniqueInvestments.filter(inv => inv.status === 'active');
+
+                if (activeInvestments.length === 0) {
+                    container.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                container.style.display = 'grid';
+                emptyState.style.display = 'none';
+                container.innerHTML = '';
+
+                for (const investment of activeInvestments) {
+                    // Fetch pool data for each investment
+                    const poolData = await this.fetchPoolData(investment.poolId);
+                    const fundingProgress = poolData ? this.calculatePoolProgress(poolData) : 100;
+
+                    // Calculate days until repayment
+                    const repaymentDate = new Date(investment.repaymentDate);
+                    const now = new Date();
+                    const daysUntilRepayment = Math.ceil((repaymentDate - now) / (1000 * 60 * 60 * 24));
+
+                    const investmentCard = document.createElement('div');
+                    investmentCard.className = 'investment-card';
+
+                    investmentCard.innerHTML = `
+                        <div class="investment-header">
+                            <div>
+                                <div class="investment-name">${investment.poolName}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.2rem;">
+                                    ${investment.businessName}
+                                </div>
+                            </div>
+                            <span class="status-badge status-active">Active</span>
+                        </div>
+                        <div class="investment-details">
+                            <div class="investment-detail">
+                                <div class="detail-value">AED ${investment.amount.toLocaleString()}</div>
+                                <div class="detail-label">Investment</div>
+                            </div>
+                            <div class="investment-detail">
+                                <div class="detail-value">${investment.shares}</div>
+                                <div class="detail-label">Shares</div>
+                            </div>
+                            <div class="investment-detail">
+                                <div class="detail-value">${investment.expectedROI}%</div>
+                                <div class="detail-label">Expected ROI</div>
+                            </div>
+                            <div class="investment-detail">
+                                <div class="detail-value">${daysUntilRepayment}</div>
+                                <div class="detail-label">Days Left</div>
+                            </div>
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-light);">
+                                <span>Pool Funding</span>
+                                <span>${fundingProgress}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${fundingProgress}%"></div>
+                            </div>
+                        </div>
+                        <div class="investment-actions">
+                            <button class="btn btn-primary btn-small view-investment-details" data-investment-id="${investment.id}">
+                                View Details
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(investmentCard);
+                }
+                
+                // No per-button listener re-attachment here; we rely on delegated listener added in initializeEventListeners()
+            }
+
+            renderInvestmentHistory(investments) {
+                const tbody = document.querySelector('#investmentHistory tbody');
+                const emptyState = document.getElementById('emptyInvestmentHistory');
+                
+                if (investments.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                tbody.innerHTML = '';
+                
+                investments.forEach(investment => {
+                    const row = document.createElement('tr');
+                    const investmentDate = new Date(investment.createdAt);
+                    
+                    row.innerHTML = `
+                        <td>${investment.investmentId}</td>
+                        <td>${investment.businessName}</td>
+                        <td>AED ${investment.amount.toLocaleString()}</td>
+                        <td>${investment.shares}</td>
+                        <td>${investmentDate.toLocaleDateString()}</td>
+                        <td><span class="status-badge status-${investment.status || 'default'}">${investment.status || 'N/A'}</span></td>
+                        <td>
+                            <button class="btn btn-small btn-secondary view-investment-history" data-investment-id="${investment.id}">
+                                Details
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                // kept for compatibility; history clicks are handled via delegation in initializeEventListeners
+            }
+
+            renderTransactions(transactions) {
+                const tbody = document.querySelector('#transactionsTable tbody');
+                const emptyState = document.getElementById('emptyTransactions');
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                tbody.innerHTML = '';
+                
+                transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    const transactionDate = new Date(transaction.timestamp);
+                    
+                    row.innerHTML = `
+                        <td>${transaction.txId}</td>
+                        <td>${transaction.type}</td>
+                        <td>AED ${transaction.amount.toLocaleString()}</td>
+                        <td>${transaction.relatedInvestment || '-'}</td>
+                        <td>${transactionDate.toLocaleDateString()}</td>
+                        <td><span class="status-badge status-${transaction.status || 'default'}">${transaction.status || 'N/A'}</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            async showInvestmentDetails(investmentId) {
+                try {
+                    showLoading('Loading investment details...');
+                    
+                    const investmentSnapshot = await database.ref('investments/' + investmentId).once('value');
+                    const investment = investmentSnapshot.val();
+                    
+                    if (!investment) {
+                        this.showToast('Investment not found', 'error');
+                        hideLoading();
+                        return;
+                    }
+                    
+                    // Fetch additional data
+                    const [poolData, businessData] = await Promise.all([
+                        this.fetchPoolData(investment.poolId),
+                        this.fetchBusinessData(investment.sellerUid)
+                    ]);
+
+                    this.selectedInvestment = investment;
+                    
+                    // Update modal title
+                    document.getElementById('investmentDetailsTitle').textContent = 
+                        `Investment: ${investment.poolName}`;
+                    
+                    // Populate investment overview
+                    const investmentOverview = document.getElementById('investmentOverview');
+                    const repaymentDate = new Date(investment.repaymentDate);
+                    const now = new Date();
+                    const daysUntilRepayment = Math.ceil((repaymentDate - now) / (1000 * 60 * 60 * 24));
+                    const expectedReturn = investment.amount * (investment.expectedROI / 100);
+                    
+                    investmentOverview.innerHTML = `
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${investment.amount.toLocaleString()}</div>
+                            <div class="detail-label">Investment Amount</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${investment.shares}</div>
+                            <div class="detail-label">Shares</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${investment.sharePrice.toLocaleString()}</div>
+                            <div class="detail-label">Share Price</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${investment.expectedROI}%</div>
+                            <div class="detail-label">Expected ROI</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${expectedReturn.toLocaleString()}</div>
+                            <div class="detail-label">Expected Return</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${daysUntilRepayment}</div>
+                            <div class="detail-label">Days Until Repayment</div>
+                        </div>
+                    `;
+                    
+                    // Populate business profile with actual data
+                    const businessProfile = document.getElementById('investmentBusinessProfile');
+                    businessProfile.innerHTML = `
+                        <div class="profile-detail">
+                            <div class="profile-label">Business Name</div>
+                            <div class="profile-value">${businessData?.businessName || investment.businessName}</div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="profile-label">Industry</div>
+                            <div class="profile-value">${businessData?.industry || 'N/A'}</div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="profile-label">Business Type</div>
+                            <div class="profile-value">${businessData?.businessType || 'N/A'}</div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="profile-label">Monthly Invoicing</div>
+                            <div class="profile-value">AED ${(businessData?.monthlyInvoicing || 0).toLocaleString()}</div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="profile-label">Trade License</div>
+                            <div class="profile-value">${businessData?.tradeLicense || 'N/A'}</div>
+                        </div>
+                        <div class="profile-detail">
+                            <div class="profile-label">Risk Level</div>
+                            <div class="profile-value">
+                                <span class="risk-score risk-${businessData?.riskLevel || 'medium'}">
+                                    ${(businessData?.riskLevel || 'Medium').charAt(0).toUpperCase() + (businessData?.riskLevel || 'Medium').slice(1)}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Populate performance metrics
+                    const performanceMetrics = document.getElementById('performanceMetrics');
+                    const poolProgress = poolData ? this.calculatePoolProgress(poolData) : 0;
+                    
+                    performanceMetrics.innerHTML = `
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${investment.amount.toLocaleString()}</div>
+                            <div class="detail-label">Investment Amount</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${investment.shares}</div>
+                            <div class="detail-label">Shares</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${investment.sharePrice.toLocaleString()}</div>
+                            <div class="detail-label">Share Price</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${investment.expectedROI}%</div>
+                            <div class="detail-label">Expected ROI</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${expectedReturn.toLocaleString()}</div>
+                            <div class="detail-label">Expected Return</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${daysUntilRepayment}</div>
+                            <div class="detail-label">Days Until Repayment</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${investment.status}</div>
+                            <div class="detail-label">Current Status</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${poolProgress}%</div>
+                            <div class="detail-label">Pool Funding</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">${poolData?.invoiceIds ? Object.keys(poolData.invoiceIds).length : 0}</div>
+                            <div class="detail-label">Invoices in Pool</div>
+                        </div>
+                        <div class="investment-detail">
+                            <div class="detail-value">AED ${poolData?.faceValueTotal?.toLocaleString() || '0'}</div>
+                            <div class="detail-label">Total Pool Value</div>
+                        </div>
+                    `;
+                    
+                    // Populate payment schedule (simplified for demo)
+                    const paymentSchedule = document.querySelector('#paymentSchedule tbody');
+                    paymentSchedule.innerHTML = '';
+                    
+                    // Create a simple payment schedule based on repayment date
+                    const paymentRow = document.createElement('tr');
+                    paymentRow.innerHTML = `
+                        <td>${repaymentDate.toLocaleDateString()}</td>
+                        <td>AED ${(investment.amount + expectedReturn).toLocaleString()}</td>
+                        <td><span class="status-badge status-${daysUntilRepayment > 0 ? 'pending' : 'completed'}">${daysUntilRepayment > 0 ? 'Pending' : 'Due'}</span></td>
+                    `;
+                    paymentSchedule.appendChild(paymentRow);
+                    
+                    // Show the modal
+                    document.getElementById('investmentDetailsModal').classList.add('active');
+
+                    hideLoading();
+                    
+                } catch (error) {
+                    console.error('Error loading investment details:', error);
+                    this.showToast('Error loading investment details', 'error');
+                }
+            }
+
+            // Add this helper method for pool progress calculation
+            calculatePoolProgress(poolData) {
+                if (!poolData || !poolData.faceValueTotal) return 0;
+                const advanceAmount = poolData.faceValueTotal * (1 - (poolData.discountPercent || 15) / 100);
+                const fundedPercentage = ((poolData.fundedAmount || 0) / advanceAmount) * 100;
+                return Math.min(100, Math.round(fundedPercentage));
+            }
+
+            attachInvestmentEventListeners() {
+                // keep for backward compatibility if referenced elsewhere, but do nothing
+                // Event delegation is used instead (single listener added in initializeEventListeners)
+            }
+
+            attachHistoryEventListeners() {
+                // kept for compatibility; history clicks are handled via delegation in initializeEventListeners
+            }
+
+            initializeEventListeners() {
+                // Modal close button
+                document.getElementById('closeInvestmentDetailsModal').addEventListener('click', () => {
+                    document.getElementById('investmentDetailsModal').classList.remove('active');
+                });
+                
+                // Close modal when clicking outside
+                document.getElementById('investmentDetailsModal').addEventListener('click', (e) => {
+                    if (e.target === document.getElementById('investmentDetailsModal')) {
+                        document.getElementById('investmentDetailsModal').classList.remove('active');
+                    }
+                });
+                
+                // Logout button
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    auth.signOut().then(() => {
+                        localStorage.removeItem('currentUser');
+                        window.location.href = 'index.html';
+                    });
+                });
+
+                // Event delegation for active investments container (prevents duplicate handlers)
+                const activeContainer = document.getElementById('activeInvestments');
+                if (activeContainer) {
+                    activeContainer.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.view-investment-details');
+                        if (!btn) return;
+                        const investmentId = btn.getAttribute('data-investment-id');
+                        this.showInvestmentDetails(investmentId);
+                    });
+                }
+
+                // Event delegation for investment history table buttons
+                const historyTable = document.getElementById('investmentHistory');
+                if (historyTable) {
+                    historyTable.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.view-investment-history');
+                        if (!btn) return;
+                        const investmentId = btn.getAttribute('data-investment-id');
+                        this.showInvestmentDetails(investmentId);
+                    });
+                }
+            }
+
+            setupRealtimeListeners() {
+                const uid = this.getCurrentUserUid();
+                if (!uid) return;
+
+                // Ensure we don't attach multiple listeners: call off() on the queries first
+                const investmentsQuery = database.ref('investments').orderByChild('investorUid').equalTo(uid);
+                investmentsQuery.off();
+                investmentsQuery.on('value', (snapshot) => {
+                    showLoading('Refreshing investments...');
+                    
+                    const investments = [];
+                    snapshot.forEach((childSnapshot) => {
+                        investments.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    // Deduplicate defensive
+                    const unique = Array.from(new Map(investments.map(i => [i.id, i])).values());
+                    unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    this.renderOverviewCards(unique);
+                    this.renderActiveInvestments(unique);
+                    this.renderInvestmentHistory(unique);
+                    
+                    setTimeout(hideLoading, 300);
+                });
+                
+                // Listen to all transactions and filter client-side for those relevant to this user
+                const txRef = database.ref('transactions');
+                txRef.off();
+                txRef.on('value', (snapshot) => {
+                    showLoading('Updating transactions...');
+                    
+                    const transactions = [];
+                    snapshot.forEach((childSnapshot) => {
+                        const tx = childSnapshot.val();
+                        // Only include tx where current user is sender or recipient
+                        if (tx.fromUid === uid || tx.toUid === uid) {
+                            transactions.push({ id: childSnapshot.key, ...tx });
+                        }
+                    });
+                    transactions.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    this.renderTransactions(transactions);
+                    
+                    setTimeout(hideLoading, 300);
+                });
+            }
+
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = 'toast';
+                
+                if (type === 'error') {
+                    toast.classList.add('error');
+                }
+                
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InvestorDashboard();
+        });
+    </script>
+<script>
+    // Investor Dashboard Authentication Check
+    // Dashboard button functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const dashboardBtn = document.getElementById('dashboardBtn');
+        if (dashboardBtn) {
+            dashboardBtn.addEventListener('click', function() {
+                const user = auth.currentUser;
+                if (user) {
+                    database.ref('users/' + user.uid).once('value')
+                        .then((snapshot) => {
+                            const userData = snapshot.val();
+                            if (userData && userData.userType === 'business') {
+                                window.location.href = 'business_dashboard.html';
+                            } else if (userData && userData.userType === 'investor') {
+                                window.location.href = 'investor_dashboard.html';
+                            } else {
+                                // Default fallback
+                                window.location.href = 'business_dashboard.html';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error getting user data:', error);
+                            window.location.href = 'business_dashboard.html';
+                        });
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InvoiceX - Blockchain-Powered Invoice Financing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Passion+One:wght@400;700;900&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+        apiKey: "AIzaSyAy3U4DYkseYNCskX1Rf20Ti6PcEcAyKW0",
+        authDomain: "invoicex-d61c5.firebaseapp.com",
+        databaseURL: "https://invoicex-d61c5-default-rtdb.firebaseio.com",
+        projectId: "invoicex-d61c5",
+        storageBucket: "invoicex-d61c5.firebasestorage.app",
+        messagingSenderId: "285072402133",
+        appId: "1:285072402133:web:0b778beff3bfed25c6e45c"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get references to Firebase services
+        const auth = firebase.auth();
+        const database = firebase.database();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #F5C04B;
+            --primary-dark: #e6a832;
+            --secondary-color: #6C63FF;
+            --dark-bg: #121212;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --text-color: #E0E0E0;
+            --text-light: rgba(224, 224, 224, 0.7);
+            --success-color: #4CAF50;
+            --info-color: #2196F3;
+        }
+
+        /* Add margin to body to account for fixed header */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-image: url(assets/bg.webp);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-color);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            padding-top: 80px; /* Add this line to push content down */
+        }
+
+        /* Enhanced Background Animation */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(245, 192, 75, 0.1) 0%, transparent 70%);
+            filter: blur(1px);
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .floating-shape:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .floating-shape:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 60%;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .floating-shape:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 15%;
+            animation-delay: -10s;
+        }
+
+        .floating-shape:nth-child(4) {
+            width: 250px;
+            height: 250px;
+            top: 30%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+
+        .grid-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(245, 192, 75, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245, 192, 75, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translate(0, 0) rotate(0deg); 
+            }
+            33% { 
+                transform: translate(30px, -50px) rotate(120deg); 
+            }
+            66% { 
+                transform: translate(-20px, 20px) rotate(240deg); 
+            }
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(50px, 50px);
+            }
+        }
+
+        /* Header */
+/* Header - Add translucent blurred background */
+header {
+    position: fixed; /* Change from relative to fixed */
+    top: 0;
+    left: 0;
+    width: 100%; /* Make it full width */
+    padding: 1rem 2rem;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* Remove max-width and margin - or keep them but wrap in a container */
+    /* Add these lines for the translucent blurred background */
+    background: rgba(18, 18, 18, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(245, 192, 75, 0.1);
+}
+
+/* Add a container inside header to maintain the centered content */
+.header-container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        .logo {
+            width: 50px;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(245, 192, 75, 0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .brand-name {
+            font-family: 'Passion One', cursive;
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: #bababa;
+            text-shadow: 0 0 30px rgba(245, 192, 75, 0.4);
+            position: relative;
+            display: inline-block;
+        }
+
+        .brand-name span {
+            color: var(--primary-color);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            animation: fadeInUp 1.2s ease-out 0.3s both;
+        }
+
+        .auth-btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .login-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .login-btn:hover {
+            background: rgba(245, 192, 75, 0.1);
+        }
+
+        .register-btn {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border: 2px solid var(--primary-color);
+            font-weight: 600;
+        }
+
+        .register-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 192, 75, 0.3);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeInUp 1.2s ease-out 0.6s both;
+        }
+
+        .hero-title {
+            font-family: 'Passion One', cursive;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .hero-title span {
+            color: var(--primary-color);
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .cta-btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .cta-primary {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            font-weight: 600;
+        }
+
+        .cta-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(245, 192, 75, 0.3);
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--text-light);
+        }
+
+        .cta-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        /* Platform Overview */
+        .platform-overview {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-family: 'Passion One', cursive;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .overview-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .overview-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(245, 192, 75, 0.05) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-10px);
+            background: var(--card-hover);
+            border-color: rgba(245, 192, 75, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .overview-card:hover::before {
+            opacity: 1;
+        }
+
+        .overview-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .overview-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.2rem;
+        }
+
+        .overview-description {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-light);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 5rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            margin: 4rem 0;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Passion One', cursive;
+            font-size: 1.5rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .step-description {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-light);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(245, 192, 75, 0.15);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(245, 192, 75, 0.05) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: -1;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.7s;
+            z-index: -1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            background: var(--card-hover);
+            border-color: rgba(245, 192, 75, 0.4);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover::after {
+            left: 100%;
+        }
+
+        .feature-icon {
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            display: block;
+            filter: drop-shadow(0 0 10px rgba(245, 192, 75, 0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .feature-title {
+            font-family: 'Passion One', cursive;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 1.2rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .feature-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: var(--primary-color);
+            border-radius: 1px;
+            transition: width 0.3s ease;
+        }
+
+        .feature-card:hover .feature-title::after {
+            width: 80px;
+        }
+
+        .feature-description {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-light);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1000px;
+            margin: 4rem auto;
+            padding: 3rem 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-family: 'Passion One', cursive;
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Registration Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 2rem; /* Add padding for mobile */
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--dark-bg);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh; /* Limit height to 90% of viewport */
+            padding: 2.5rem;
+            position: relative;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(245, 192, 75, 0.2);
+            overflow-y: auto; /* Make it scrollable */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Custom scrollbar for modal */
+        .modal::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            margin: 15px 0; /* 👈 This reduces scrollbar height (top & bottom space) */
+        }
+
+        .modal::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+            
+        }
+
+        .modal::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--primary-color);
+        }
+
+        .modal-title {
+            font-family: 'Passion One', cursive;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-input, select.form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.3s ease;
+            font-size: 1rem; /* Ensure consistent font size */
+        }
+
+        /* Make select dropdowns look consistent */
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23F5C04B' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 12px;
+            padding-right: 2.5rem;
+            background-color: rgba(30, 30, 30, 0.95) !important; /* Darker background */
+            color: var(--text-color) !important; /* Ensure text is light */
+            border: 1px solid rgba(245, 192, 75, 0.3) !important; /* Better border */
+        }
+
+        /* Style the dropdown options */
+        select.form-input option {
+            background-color: #1e1e1e; /* Dark background for options */
+            color: var(--text-color); /* Light text for options */
+            padding: 10px;
+        }
+
+        /* Focus state improvement */
+        select.form-input:focus {
+            outline: none;
+            border-color: var(--primary-color) !important;
+            background: rgba(40, 40, 40, 0.95) !important;
+            box-shadow: 0 0 0 2px rgba(245, 192, 75, 0.2);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-family: 'Roboto', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .user-type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-type-btn {
+            flex: 1;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .user-type-btn.active {
+            background: rgba(245, 192, 75, 0.2);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(245, 192, 75, 0.1);
+            position: relative;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Passion One', cursive;
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-tagline {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(245, 192, 75, 0.1);
+        }
+
+        .social-link:hover {
+            background: var(--primary-color);
+            color: var(--dark-bg);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(245, 192, 75, 0.3);
+        }
+
+        .copyright {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            opacity: 0.7;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Particle Animation */
+        .particles-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(-100px) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-logo {
+            font-family: 'Passion One', cursive;
+            font-size: 3rem;
+            color: #e0e0e0;
+            text-shadow: 0 0 20px rgba(245, 192, 75, 0.5);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(245, 192, 75, 0.2);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 20px rgba(245, 192, 75, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .stats-section {
+                flex-wrap: wrap;
+            }
+            
+            .stat-item {
+                flex: 1 1 50%;
+                margin-bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .hero-title {
+                font-size: 2.8rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+                padding: 0 1rem;
+            }
+
+            .auth-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .steps-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .step-card {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand-name {
+                font-size: 2rem;
+            }
+
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .feature-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .auth-btn {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+
+            .modal {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+/* Modern Navigation Styles */
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-link {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--primary-color);
+    background: rgba(245, 192, 75, 0.1);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after {
+    width: 80%;
+}
+
+.nav-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 0.5rem;
+}
+
+.nav-dashboard-btn {
+    background: rgba(245, 192, 75, 0.1);
+    border-color: rgba(245, 192, 75, 0.3);
+}
+
+.nav-dashboard-btn:hover {
+    background: rgba(245, 192, 75, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .main-nav {
+        gap: 1rem;
+    }
+    
+    .nav-link {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .nav-divider {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .header-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-logo">Invoice<span style="color: #f5c04b;">X</span></div>
+    </div>
+
+    <!-- Background Animations -->
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+        </div>
+        <div class="grid-background"></div>
+    </div>
+
+    <!-- Particle Animation -->
+    <div class="particles-container" id="particlesContainer"></div>
+
+
+    <!-- Header -->
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="assets/3.png" alt="InvoiceX Logo" class="logo" onerror="this.style.display='none'">
+                <h1 class="brand-name">Invoice<span>X</span></h1>
+            </div>
+            
+            <nav class="main-nav" id="mainNav">
+                <!-- This will be populated dynamically based on auth state -->
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <h1 class="hero-title">Blockchain-Powered <span>Invoice Financing</span></h1>
+            <p class="hero-subtitle">Connecting businesses seeking immediate cash flow with investors through AI-assisted risk assessment and blockchain transparency. Upload invoices, create investment pools, and access funding in minutes.</p>        <div class="cta-buttons">
+            <button class="cta-btn cta-primary" id="heroRegisterBtn">Get Started</button>
+            <button class="cta-btn cta-secondary" id="learnMoreBtn">Learn More</button>
+        </div>
+    </section>
+
+    <!-- Platform Overview -->
+    <section class="platform-overview">
+        <h2 class="section-title">How InvoiceX Works</h2>
+        <div class="overview-grid">
+            <div class="overview-card">
+                <span class="overview-icon">📤</span>
+                <h3 class="overview-title">Invoice Upload</h3>
+                <p class="overview-description">Businesses securely upload unpaid invoices with detailed buyer information and payment terms for verification.</p>
+            </div>
+            <div class="overview-card">
+                <span class="overview-icon">🔄</span>
+                <h3 class="overview-title">Pool Creation</h3>
+                <p class="overview-description">Group multiple invoices into investment pools to diversify risk and attract more investors.</p>
+            </div>
+            <div class="overview-card">
+                <span class="overview-icon">🤖</span>
+                <h3 class="overview-title">AI Risk Assessment</h3>
+                <p class="overview-description">Our AI analyzes business profiles and invoice data to generate comprehensive risk scores.</p>
+            </div>
+        </div>
+        
+        <div class="overview-grid">
+            <div class="overview-card">
+                <span class="overview-icon">💼</span>
+                <h3 class="overview-title">Investor Marketplace</h3>
+                <p class="overview-description">Investors browse and invest in invoice pools with transparent risk profiles and returns.</p>
+            </div>
+            <div class="overview-card">
+                <span class="overview-icon">📊</span>
+                <h3 class="overview-title">Portfolio Management</h3>
+                <p class="overview-description">Track investments, monitor returns, and manage your portfolio through intuitive dashboards.</p>
+            </div>
+            <div class="overview-card">
+                <span class="overview-icon">⚡</span>
+                <h3 class="overview-title">Instant Settlement</h3>
+                <p class="overview-description">Businesses receive immediate payments while investors get automated returns upon invoice maturity.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <h2 class="section-title">Our Process</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Upload Invoice</h3>
+                <p class="step-description">Businesses submit unpaid invoices through our secure platform.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3 class="step-title">AI Verification</h3>
+                <p class="step-description">Our AI system verifies and assesses the risk of each invoice.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Token Creation</h3>
+                <p class="step-description">Approved invoices are tokenized on the blockchain.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3 class="step-title">Investor Purchase</h3>
+                <p class="step-description">Investors purchase tokens, providing immediate liquidity.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">5</div>
+                <h3 class="step-title">Automated Settlement</h3>
+                <p class="step-description">Smart contracts automatically settle payments when due.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <h2 class="section-title">Key Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3 class="feature-title">Instant Liquidity</h3>
+                <p class="feature-description">Unlock funds tied up in unpaid invoices within minutes, not months. Transform your accounts receivable into immediate working capital.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🔒</span>
+                <h3 class="feature-title">Blockchain Security</h3>
+                <p class="feature-description">Enterprise-grade security powered by distributed ledger technology. Your transactions are immutable, transparent, and completely secure.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">📈</span>
+                <h3 class="feature-title">AI Risk Assessment</h3>
+                <p class="feature-description">Advanced AI algorithms analyze invoice data, customer history, and market patterns to generate transparent risk profiles.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🤝</span>
+                <h3 class="feature-title">Smart Contracts</h3>
+                <p class="feature-description">Automated, trustless execution of payments through blockchain smart contracts, eliminating intermediaries and reducing costs.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">🌍</span>
+                <h3 class="feature-title">Global Access</h3>
+                <p class="feature-description">Connect with investors worldwide while complying with UAE fintech regulations and international standards.</p>
+            </div>
+
+            <div class="feature-card">
+                <span class="feature-icon">💳</span>
+                <h3 class="feature-title">Secure Returns</h3>
+                <p class="feature-description">Investors earn predictable, short-term returns with minimized risk through our carefully vetted invoice financing opportunities.</p>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Registration Modal -->
+    <!-- Registration Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal">
+            <button class="close-modal" id="closeRegisterModal">&times;</button>
+            <h2 class="modal-title">Create Account</h2>
+            <div class="user-type-selector">
+                <button class="user-type-btn active" data-type="business">Business</button>
+                <button class="user-type-btn" data-type="investor">Investor</button>
+            </div>
+            <form id="registrationForm">
+                <!-- Common Fields -->
+                <div class="form-group">
+                    <label class="form-label" for="fullName">Full Name</label>
+                    <input type="text" id="fullName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" class="form-input" required>
+                </div>
+
+                <!-- Business Specific Fields -->
+                <div class="business-fields">
+                    <div class="form-group">
+                        <label class="form-label" for="businessName">Business Name</label>
+                        <input type="text" id="businessName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tradeLicense">Trade License / Registration No.</label>
+                        <input type="text" id="tradeLicense" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="businessType">Business Type</label>
+                        <select id="businessType" class="form-input" required>
+                            <option value="">Select Business Type</option>
+                            <option value="SME">SME</option>
+                            <option value="Freelancer">Freelancer</option>
+                            <option value="LLC">LLC</option>
+                            <option value="Partnership">Partnership</option>
+                            <option value="Sole Proprietorship">Sole Proprietorship</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="industry">Industry / Sector</label>
+                        <select id="industry" class="form-input" required>
+                            <option value="">Select Industry</option>
+                            <option value="Technology">Technology</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Construction">Construction</option>
+                            <option value="Retail">Retail</option>
+                            <option value="Manufacturing">Manufacturing</option>
+                            <option value="Professional Services">Professional Services</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="monthlyInvoicing">Average Monthly Invoicing (AED)</label>
+                        <input type="number" id="monthlyInvoicing" class="form-input" placeholder="e.g., 50000" required>
+                    </div>
+                </div>
+
+                <!-- Investor Specific Fields -->
+                <div class="investor-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label" for="country">Country of Residence</label>
+                        <select id="country" class="form-input" required>
+                            <option value="">Select Country</option>
+                            <option value="UAE">United Arab Emirates</option>
+                            <option value="KSA">Saudi Arabia</option>
+                            <option value="USA">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="India">India</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="investmentRange">Investment Range (AED)</label>
+                        <select id="investmentRange" class="form-input" required>
+                            <option value="">Select Range</option>
+                            <option value="10000-50000">10,000 - 50,000 AED</option>
+                            <option value="50000-100000">50,000 - 100,000 AED</option>
+                            <option value="100000-250000">100,000 - 250,000 AED</option>
+                            <option value="250000-500000">250,000 - 500,000 AED</option>
+                            <option value="500000+">500,000+ AED</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="riskLevel">Preferred Risk Level</label>
+                        <select id="riskLevel" class="form-input" required>
+                            <option value="">Select Risk Level</option>
+                            <option value="low">Low Risk</option>
+                            <option value="medium">Medium Risk</option>
+                            <option value="high">High Risk</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Common Password Fields -->
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="form-input" required>
+                </div>
+                <button type="submit" class="submit-btn">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="close-modal" id="closeLoginModal">&times;</button>
+            <h2 class="modal-title">Login to Your Account</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">Invoice<span style="color: #f5c04b;">X</span></div>
+            <p class="footer-tagline">Empowering businesses with blockchain-powered invoice financing solutions. Join the future of finance today.</p>
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            </div>
+            <p class="copyright">© 2023 InvoiceX. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Loading Animation
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                setTimeout(function() {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }, 500);
+            }, 1500);
+        });
+
+        // Create Particles
+        function createParticles() {
+            const container = document.getElementById('particlesContainer');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // Random position
+                const left = Math.random() * 100;
+                particle.style.left = `${left}%`;
+                
+                // Random size
+                const size = Math.random() * 3 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random opacity
+                const opacity = Math.random() * 0.5 + 0.2;
+                particle.style.opacity = opacity;
+                
+                // Random animation delay
+                const delay = Math.random() * 15;
+                particle.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(particle);
+            }
+        }
+
+        
+
+        // Modal Functionality
+        const registerModal = document.getElementById('registerModal');
+        const loginModal = document.getElementById('loginModal');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const closeLoginModal = document.getElementById('closeLoginModal');
+        const userTypeBtns = document.querySelectorAll('.user-type-btn');
+        const registrationForm = document.getElementById('registrationForm');
+        const loginForm = document.getElementById('loginForm');
+
+
+        // Close Modals
+        closeRegisterModal.addEventListener('click', () => {
+            registerModal.classList.remove('active');
+            // Reset scroll position when closing
+            setTimeout(() => {
+                document.querySelector('.modal').scrollTop = 0;
+            }, 300);
+        });
+
+        closeLoginModal.addEventListener('click', () => {
+            loginModal.classList.remove('active');
+            // Reset scroll position when closing
+            setTimeout(() => {
+                document.querySelector('.modal').scrollTop = 0;
+            }, 300);
+        });
+
+        // Close modal when clicking outside
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.classList.remove('active');
+                setTimeout(() => {
+                    document.querySelector('.modal').scrollTop = 0;
+                }, 300);
+            }
+            if (e.target === loginModal) {
+                loginModal.classList.remove('active');
+                setTimeout(() => {
+                    document.querySelector('.modal').scrollTop = 0;
+                }, 300);
+            }
+        });
+
+        // User Type Selection
+        // User Type Selection - FIXED VERSION
+        userTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                userTypeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const userType = btn.dataset.type;
+                const businessFields = document.querySelector('.business-fields');
+                const investorFields = document.querySelector('.investor-fields');
+                
+                if (userType === 'business') {
+                    businessFields.style.display = 'block';
+                    investorFields.style.display = 'none';
+                    
+                    // Make business fields required and investor fields not required
+                    document.querySelectorAll('.business-fields input, .business-fields select').forEach(field => {
+                        field.required = true;
+                    });
+                    document.querySelectorAll('.investor-fields input, .investor-fields select').forEach(field => {
+                        field.required = false;
+                    });
+                } else {
+                    businessFields.style.display = 'none';
+                    investorFields.style.display = 'block';
+                    
+                    // Make investor fields required and business fields not required
+                    document.querySelectorAll('.business-fields input, .business-fields select').forEach(field => {
+                        field.required = false;
+                    });
+                    document.querySelectorAll('.investor-fields input, .investor-fields select').forEach(field => {
+                        field.required = true;
+                    });
+                }
+            });
+        });
+
+        // Form Submission
+        // Form Submission - Registration - FIXED VERSION
+        registrationForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const userType = document.querySelector('.user-type-btn.active').dataset.type;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const fullName = document.getElementById('fullName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+
+            // Basic validation
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = registrationForm.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+
+            // Create user with Firebase Authentication
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Prepare user data for database - FIXED: Properly capture business fields
+                    const userData = {
+                        fullName: fullName,
+                        email: email,
+                        phoneNumber: phoneNumber,
+                        userType: userType,
+                        createdAt: new Date().toISOString(),
+                        status: 'active'
+                    };
+
+                    // Add user type specific data - FIXED: Proper business field handling
+                    if (userType === 'business') {
+                        userData.businessName = document.getElementById('businessName').value;
+                        userData.tradeLicense = document.getElementById('tradeLicense').value;
+                        userData.businessType = document.getElementById('businessType').value;
+                        userData.industry = document.getElementById('industry').value;
+                        userData.monthlyInvoicing = document.getElementById('monthlyInvoicing').value;
+                        
+                        // Clear investor fields
+                        userData.country = '';
+                        userData.investmentRange = '';
+                        userData.riskLevel = '';
+                    } else {
+                        userData.country = document.getElementById('country').value;
+                        userData.investmentRange = document.getElementById('investmentRange').value;
+                        userData.riskLevel = document.getElementById('riskLevel').value;
+                        
+                        // Clear business fields
+                        userData.businessName = '';
+                        userData.tradeLicense = '';
+                        userData.businessType = '';
+                        userData.industry = '';
+                        userData.monthlyInvoicing = '';
+                    }
+
+                    // Save user data to Realtime Database
+                    return database.ref('users/' + user.uid).set(userData);
+                })
+                .then(() => {
+                    // Send email verification
+                    return auth.currentUser.sendEmailVerification();
+                })
+                .then(() => {
+                    alert(`Account created successfully! Welcome to InvoiceX, ${fullName}! Please check your email for verification.`);
+                    registerModal.classList.remove('active');
+                    registrationForm.reset();
+                    
+                    // Reset user type to business
+                    userTypeBtns[0].click();
+                })
+                .catch((error) => {
+                    let errorMessage = 'An error occurred during registration. ';
+                    
+                    switch (error.code) {
+                        case 'auth/email-already-in-use':
+                            errorMessage += 'This email is already registered.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage += 'The email address is invalid.';
+                            break;
+                        case 'auth/weak-password':
+                            errorMessage += 'The password is too weak.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage += 'Network error. Please check your connection.';
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    
+                    alert(errorMessage);
+                    console.error('Registration error:', error);
+                })
+                .finally(() => {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                });
+        });
+
+        // Form Submission - Login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Show loading state
+            const submitBtn = loginForm.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Logging in...';
+            submitBtn.disabled = true;
+
+            // Sign in with Firebase Authentication
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Signed in successfully
+                    const user = userCredential.user;
+                    
+                    // Check if email is verified
+                    // Skip email verification for demo (comment out the verification check)
+                    // if (!user.emailVerified) {
+                    //     alert('Please verify your email address before logging in. Check your inbox for the verification link.');
+                    //     auth.signOut(); // Sign out until email is verified
+                    //     return;
+                    // }
+
+                    // Get user data from database
+                    return database.ref('users/' + user.uid).once('value')
+                        .then((snapshot) => {
+                            const userData = snapshot.val();
+                            alert(`Welcome back, ${userData.fullName}! (${userData.userType})`);
+                            
+                            // Redirect to dashboard based on user type
+                            setTimeout(() => {
+                                if (userData.userType === 'business') {
+                                    window.location.href = 'business_dashboard.html';
+                                } else {
+                                    window.location.href = 'investor_dashboard.html';
+                                }
+                            }, 1000);
+                            
+                            loginModal.classList.remove('active');
+                            loginForm.reset();
+                        });
+                })
+                .catch((error) => {
+                    // Handle errors
+                    let errorMessage = 'Login failed. ';
+                    
+                    switch (error.code) {
+                        case 'auth/user-not-found':
+                            errorMessage += 'No account found with this email.';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage += 'Incorrect password.';
+                            break;
+                        case 'auth/invalid-email':
+                            errorMessage += 'The email address is invalid.';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage += 'This account has been disabled.';
+                            break;
+                        case 'auth/network-request-failed':
+                            errorMessage += 'Network error. Please check your connection.';
+                            break;
+                        default:
+                            errorMessage += error.message;
+                    }
+                    
+                    alert(errorMessage);
+                    console.error('Login error:', error);
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                });
+        });
+
+        // Learn More Button
+        document.getElementById('learnMoreBtn').addEventListener('click', () => {
+            document.querySelector('.platform-overview').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        });
+
+        // Auth State Listener
+        // Auth State Listener - Enhanced for dynamic navigation
+        auth.onAuthStateChanged((user) => {
+            const mainNav = document.getElementById('mainNav');
+            
+            if (user) {
+                // User is signed in - Show dashboard navigation
+                database.ref('users/' + user.uid).once('value')
+                    .then((snapshot) => {
+                        const userData = snapshot.val();
+                        
+                        mainNav.innerHTML = `
+                            <a href="index.html" class="nav-link">Home</a>
+                            <a href="marketplace.html" class="nav-link">Marketplace</a>
+                            <div class="nav-divider"></div>
+                            <button class="auth-btn login-btn nav-dashboard-btn" id="dashboardBtn">Dashboard</button>
+                            <button class="auth-btn register-btn" id="logoutBtn">Logout</button>
+                        `;
+                        
+                        // Add logout functionality
+                        document.getElementById('logoutBtn').addEventListener('click', () => {
+                            auth.signOut().then(() => {
+                                localStorage.removeItem('currentUser');
+                                alert('Logged out successfully!');
+                                window.location.reload();
+                            });
+                        });
+                        
+                        // Add dashboard functionality
+                        document.getElementById('dashboardBtn').addEventListener('click', () => {
+                            if (userData && userData.userType === 'business') {
+                                window.location.href = 'business_dashboard.html';
+                            } else if (userData && userData.userType === 'investor') {
+                                window.location.href = 'investor_dashboard.html';
+                            } else {
+                                alert('User type not found. Redirecting to business dashboard.');
+                                window.location.href = 'business_dashboard.html';
+                            }
+                        });
+                        
+                        // Store user info in localStorage for persistence
+                        localStorage.setItem('currentUser', JSON.stringify({
+                            uid: user.uid,
+                            email: user.email,
+                            userType: userData.userType
+                        }));
+                    })
+                    .catch((error) => {
+                        console.error('Error getting user data:', error);
+                        // Fallback to basic navigation if user data fetch fails
+                        mainNav.innerHTML = `
+                            <button class="auth-btn login-btn" id="loginBtn">Login</button>
+                            <button class="auth-btn register-btn" id="registerBtn">Register</button>
+                        `;
+                        setupAuthButtons();
+                    });
+            } else {
+                // User is signed out - Show login/register buttons
+                mainNav.innerHTML = `
+                    <button class="auth-btn login-btn" id="loginBtn">Login</button>
+                    <button class="auth-btn register-btn" id="registerBtn">Register</button>
+                `;
+                setupAuthButtons();
+                localStorage.removeItem('currentUser');
+            }
+        });
+
+        // Setup auth buttons for non-logged in state
+        function setupAuthButtons() {
+            const registerBtn = document.getElementById('registerBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            const heroRegisterBtn = document.getElementById('heroRegisterBtn');
+            const registerModal = document.getElementById('registerModal');
+            const loginModal = document.getElementById('loginModal');
+
+            // Open Register Modal
+            if (registerBtn) {
+                registerBtn.addEventListener('click', () => {
+                    registerModal.classList.add('active');
+                });
+            }
+
+            if (heroRegisterBtn) {
+                heroRegisterBtn.addEventListener('click', () => {
+                    registerModal.classList.add('active');
+                });
+            }
+
+            // Open Login Modal
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    loginModal.classList.add('active');
+                });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            
+            // Animate stats when they come into view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateStats();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(document.querySelector('.stats-section'));
+        });
+
+        
+    </script>
+
+</body>
+</html>
