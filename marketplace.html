@@ -1862,12 +1862,23 @@ class InvestmentChatbot {
         
         const avatarIcon = sender === 'bot' ? 'fas fa-robot' : 'fas fa-user';
         
+        // Convert markdown-style bold (**text**) to <strong>text</strong>
+        const safeContent = String(content)
+            // escape HTML special chars first to avoid injection
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            // then replace **bold** with <strong>
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // preserve newlines as <br>
+            .replace(/\n/g, '<br>');
+
         messageDiv.innerHTML = `
             <div class="message-avatar">
                 <i class="${avatarIcon}"></i>
             </div>
             <div class="message-content">
-                ${content.replace(/\n/g, '<br>')}
+                ${safeContent}
             </div>
         `;
         
